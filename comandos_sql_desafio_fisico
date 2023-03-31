@@ -1,0 +1,160 @@
+--drop table atendente, medico, endereco, senha, historico, paciente, ficha 
+-- **tentativas de reformulação das tabelas 
+ 
+ CREATE TABLE "endereco" (
+  "end_cd_id" serial not null,
+  "end_tx_estado" varchar (30) not null,
+  "end_tx_municipio" varchar (50) not null,
+  "end_tx_bairro" varchar (50) not null,
+  "end_tx_rua" varchar (100) not null,
+  "end_int_numero" integer,
+  PRIMARY KEY ("end_cd_id")
+);
+
+CREATE TABLE "senha" (
+  "sen_cd_id" serial not null,
+  "sen_int_numero" integer not null,
+  PRIMARY KEY ("sen_cd_id")
+);
+
+CREATE TABLE "paciente" (
+  "pac_cd_id" serial not null,
+  "pac_tx_nome" varchar (50) not null,
+  "pac_int_telefone" varchar (11) not null,
+  "pac_int_cpf" varchar (11) not null,
+  "pac_dt_data_nascimento" date not null,
+  "fk_end_cd_id" int4,
+  PRIMARY KEY ("pac_cd_id"),
+    CONSTRAINT "FK_paciente.end_cd_id"
+      FOREIGN KEY ("fk_end_cd_id")
+        REFERENCES "endereco"("end_cd_id")
+);
+
+ CREATE TABLE "medico" (
+  "med_cd_id" serial not null,
+  "med_tx_nome" varchar (50) not null,
+  "med_int_cpf" varchar (11) not null,
+  "fk_pac_cd_id" int4,
+  PRIMARY KEY ("med_cd_id"),
+    CONSTRAINT "FK_medico.pac_cd_id"
+      FOREIGN KEY ("fk_pac_cd_id")
+        REFERENCES "paciente"("pac_cd_id")
+);
+
+CREATE TABLE "atendente" (
+  "ate_cd_id" serial not null,
+  "ate_tx_nome" varchar (50) not null,
+  "ate_int_cpf" varchar (11) not null,
+  "fk_pac_cd_id" int4,
+  PRIMARY KEY ("ate_cd_id"),
+    CONSTRAINT "FK_atendente.pac_cd_id"
+      FOREIGN KEY ("fk_pac_cd_id")
+        REFERENCES "paciente"("pac_cd_id")
+);
+
+CREATE TABLE "ficha" ( 
+  "fic_cd_id" serial not null,
+  "fic_dt_data" timestamp,
+  "fic_tx_descricao" varchar (255) not null,
+  "fic_tx_diagnostico" varchar (255) not null,
+  "fic_tx_tratamento" varchar,
+  "fic_dt_retorno" date,
+  "fk_pac_cd_id" int4,
+  "fk_sen_cd_id" int4,
+  PRIMARY KEY ("fic_cd_id"),
+  CONSTRAINT "FK_ficha.pac_cd_id"
+    FOREIGN KEY ("fk_pac_cd_id")
+      REFERENCES "paciente"("pac_cd_id"),
+  CONSTRAINT "FK_ficha.sen_cd_id"
+    FOREIGN KEY ("fk_sen_cd_id")
+      REFERENCES "senha"("sen_cd_id")
+);
+
+CREATE TABLE "historico" (
+  "his_cd_id" serial not null,
+  "sen_int_numero" integer,
+  "fk_fic_cd_id" int4,
+  "fk_pac_cd_id" int4,
+  PRIMARY KEY ("his_cd_id"),
+    CONSTRAINT "FK_historico.fk_fic_cd_id"
+      FOREIGN KEY ("fk_fic_cd_id")
+        REFERENCES "ficha"("fic_cd_id"),
+    CONSTRAINT "FK_historico.pac_cd_id"
+      FOREIGN KEY ("fk_pac_cd_id")
+        REFERENCES "paciente"("pac_cd_id")
+);
+
+
+insert into medico (med_tx_nome, med_int_cpf)
+values ('Burguesinha', '20302420230');
+
+insert into atendente (ate_tx_nome, ate_int_cpf)
+values ('Proletário', '20672429810');
+
+insert into endereco (end_tx_estado, end_tx_municipio, end_tx_bairro, end_tx_rua, end_int_numero) 
+values ('Minas Gerais', 'Belo Horizonte', 'Cidade Nova', 'Rua Cardeal Stepinac','432');
+
+insert into paciente (pac_tx_nome, pac_int_telefone, pac_int_cpf, pac_dt_data_nascimento)
+values ('Senhorzinho da Lancha', '31992322334', '24672420370', '1964-03-31');
+
+insert into senha (sen_int_numero)
+values ('81'),('82'),('83'),('84'),('85');
+
+insert into ficha (fic_dt_data, fic_tx_descricao, fic_tx_diagnostico, fic_tx_tratamento, fic_dt_retorno)
+values ('2022-01-11', 'O paciente apresenta alguns sintomas, incluindo febre alta, dor de cabeça, dores musculares intensas e fadiga extrema. Ele também relata ter tosse seca e dor de garganta.', 'Influenza.', 'Oseltamivir, Dipirona, Repouso e isolamento social.', '2022-01-21' );
+		
+insert into ficha (fic_dt_data, fic_tx_descricao, fic_tx_diagnostico, fic_tx_tratamento, fic_dt_retorno)
+values ('2022-01-21', 'O paciente compareceu para retorno programado.', 
+		'O paciente grande melhora no quadro com recuperação parcial.', 'Repouso e isolamento social por mais uma semana.', '2022-01-28');
+	
+insert into ficha (fic_dt_data, fic_tx_descricao, fic_tx_diagnostico)
+values ('2022-01-21', 'O paciente compareceu para retorno programado.',
+		'O paciente apresenta um quadro de completa recuperação estando liberado para voltar às atividades normais.');
+
+insert into historico (his_cd_id)
+values ('1'), ('2'), ('3')
+
+create view historicou as
+select pac_tx_nome, fic_dt_data, fic_tx_descricao, fic_tx_diagnostico, fic_tx_tratamento, fic_dt_retorno
+from historico
+		inner join paciente on historico.his_cd_id = paciente.pac_cd_id
+		inner join ficha on historico.his_cd_id = ficha.fic_cd_id;
+	
+	select pac_tx_nome, fic_dt_data, fic_tx_descricao, fic_tx_diagnostico, fic_tx_tratamento, fic_dt_retorno
+from historico
+		inner join paciente on historico.his_cd_id = paciente.pac_cd_id
+		inner join ficha on historico.his_cd_id = ficha.fic_cd_id;
+		
+update atendente 
+set ate_tx_nome = 'CLT'
+where ate_cd_id = 1;
+
+update medico 
+set med_tx_nome = 'Senhorita'
+where med_cd_id = 1;
+
+update paciente
+set pac_tx_nome = 'Idoso'
+where pac_cd_id = 1;
+	
+	
+	select * from paciente;
+	
+	select * from medico;
+	
+	select * from atendente;
+	
+	select * from ficha;
+	
+	select * from historico;
+	
+	select * from senha;
+	
+	select * from endereco;
+	
+	select * from historicou;
+	
+	
+	
+	
+	
